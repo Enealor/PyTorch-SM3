@@ -55,7 +55,7 @@ class SM3(Optimizer):
                 # State initialization
                 if len(state) == 0:
                     state['step'] = 0
-                    state['momentum_buffer'] = torch.zeros_like(grad)
+                    state['momentum_buffer'] = 0.
                     accumulators = _zero_accumulators(grad.shape, grad.dtype, grad.device)
                     # Add accumulators to state dictionary
                     state.update(accumulators)
@@ -64,7 +64,7 @@ class SM3(Optimizer):
 
                 # Get update from accumulators
                 update = _compute_accumulator(acc_list, shape)
-                if beta > 0:
+                if beta > 0.:
                     update.mul_(beta)
                 update.addcmul_(1. - beta, grad, grad)
 
@@ -79,7 +79,7 @@ class SM3(Optimizer):
                 update.rsqrt_()
                 update.mul_(grad)
 
-                if momentum > 0:
+                if momentum > 0.:
                     update.mul_(1. - momentum)
                     m = state['momentum_buffer']
                     update.add_(momentum, m)
