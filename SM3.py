@@ -60,7 +60,10 @@ class SM3(Optimizer):
                     # Add accumulators to state dictionary
                     state.update(accumulators)
                 # Get previous accumulators mu_{t-1}
-                acc_list = [state[_key(i)] for i in range(rank)]
+                if rank > 1:
+                    acc_list = [state[_key(i)] for i in range(rank)]
+                else:
+                    acc_list = [state[_key(0)]]
 
                 # Get update from accumulators
                 update = _compute_accumulator(acc_list, shape)
@@ -69,9 +72,12 @@ class SM3(Optimizer):
                 update.addcmul_(1. - beta, grad, grad)
 
                 # Update accumulators
-                for i in range(rank):
-                    nu_max = _max_reduce_except_dim(update, i)
-                    state[_key(i)] = torch.max(acc_list[i], nu_max).detach()
+                if rank > 1:
+                    for i in range(rank):
+                        nu_max = _max_reduce_except_dim(update, i)
+                        state[_key(i)] = torch.max(acc_list[i], nu_max).detach()
+                else:
+                    state[_key(0)] = torch.max(acc_list[0], update).detach()
 
                 # TODO: Add eps argument
                 update.add_(1e-8)
@@ -108,9 +114,13 @@ def _zero_accumulators(shape, dtype, device):
     # Creates initial accumulator
     rank = len(shape)
     accumulator = {}
-    for i in range(rank):
-        acc_shape = [1]*i + [shape[i]] + [1]*(rank-1-i)
-        accumulator[_key(i)] = torch.zeros(acc_shape, dtype=dtype, device=device)
+    if rank == 0:
+        # We handle the scalar case separately.
+        accumulator[_key(0)] = torch.zeros(shape, dtype=dtype, device=device)
+    else:
+        for i in range(rank):
+            acc_shape = [1]*i + [shape[i]] + [1]*(rank-1-i)
+            accumulator[_key(i)] = torch.zeros(acc_shape, dtype=dtype, device=device)
     return accumulator
 
 def _max_reduce_except_dim(tensor, dim):
