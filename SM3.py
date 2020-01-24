@@ -79,16 +79,13 @@ class SM3(Optimizer):
                 else:
                     state[_key(0)] = torch.max(acc_list[0], update).detach()
 
+                # Add small amount for numerical stability
                 # TODO: Add eps argument
-                update.add_(1e-8)
-
-                update.rsqrt_()
-                update.mul_(grad)
+                update.add_(1e-30).rsqrt_().mul_(grad)
 
                 if momentum > 0.:
-                    update.mul_(1. - momentum)
                     m = state['momentum_buffer']
-                    update.add_(momentum, m)
+                    update.mul_(1. - momentum).add_(momentum, m)
                     state['momentum_buffer'] = update.detach()
 
                 p.data.sub_(group['lr'], update)
@@ -116,10 +113,12 @@ def _zero_accumulators(shape, dtype, device):
     accumulator = {}
     if rank == 0:
         # We handle the scalar case separately.
+        # TODO: Add memory_format=torch.preserve_format (new in PyTorch 1.4)
         accumulator[_key(0)] = torch.zeros(shape, dtype=dtype, device=device)
     else:
         for i in range(rank):
             acc_shape = [1]*i + [shape[i]] + [1]*(rank-1-i)
+            # TODO: Add memory_format=torch.preserve_format (new in PyTorch 1.4)
             accumulator[_key(i)] = torch.zeros(acc_shape, dtype=dtype, device=device)
     return accumulator
 
