@@ -23,7 +23,7 @@ def _test_dense_0d_updates(lr, momentum, beta):
         else:
             accumulator = accumulator + numpy.square(grad)
 
-        exp_p_grad = grad / numpy.sqrt(accumulator+1e-8)
+        exp_p_grad = grad / numpy.sqrt(accumulator)
         gbar = momentum * gbar + (1. - momentum) * exp_p_grad
         var = var - lr * gbar
         # Check that variable and momentum are as expected after one step of
@@ -53,7 +53,7 @@ def _test_dense_1d_updates(lr, momentum, beta):
         else:
             accumulator = accumulator + numpy.square(grad)
 
-        exp_p_grad = grad / numpy.sqrt(accumulator+1e-8)
+        exp_p_grad = grad / numpy.sqrt(accumulator)
         gbar = momentum * gbar + (1. - momentum) * exp_p_grad
         var = var - lr * gbar
         # Check that variable and momentum are as expected after one step of
@@ -87,7 +87,7 @@ def _test_dense_2d_updates(lr, momentum, beta):
         # Update SM3 accumulators.
         row_accumulator = numpy.amax(accumulator, axis=1, keepdims=True)
         col_accumulator = numpy.amax(accumulator, axis=0, keepdims=True)
-        exp_p_grad = grad / numpy.sqrt(accumulator+1e-8)
+        exp_p_grad = grad / numpy.sqrt(accumulator)
         gbar = momentum * gbar + (1. - momentum) * exp_p_grad
         var = var - lr * gbar
         # Check that variable and momentum are as expected after one step of
