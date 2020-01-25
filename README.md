@@ -12,9 +12,9 @@
  will take `O(prod n_i)` memory while the optimization using SM3 will use
  `O(sum n_i)` memory.
 
- This advantage drastically shrinks if `momentum > 0.0` as this is tracked using
- a tensor of the same shape as the tensor being optimized. In this case, SM3
- will use just over half as much as Adam.
+ This advantage drastically shrinks if `momentum > 0.0`. The momentum is
+ tracked using a tensor of the same shape as the tensor being optimized. In
+ this case, SM3 will use just over half as much memory as Adam.
 
 # Differences
  The TensorFlow version mentions that exponential moving averages can
