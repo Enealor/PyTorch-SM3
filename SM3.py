@@ -12,16 +12,17 @@ class SM3(Optimizer):
         lr (float, optional): coefficient that scale delta before it is applied
             to the parameters (default: 1.0)
         momentum (float, optional): coefficient used to scale prior updates
-            before adding (default: 0.0)
+            before adding. Drastically increases memory if `momentum > 0.0` 
+            (default: 0.0)
         beta (float, optional): coefficient used for exponential moving averages
             (default: 0.0)
     """
     def __init__(self, params, lr=1.0, momentum=0.0, beta=0.0):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {0}".format(lr))
-        if not 0.0 <= momentum:
+        if not 0.0 <= momentum < 1.0:
             raise ValueError("Invalid momentum: {0}".format(momentum))
-        if not 0.0 <= beta:
+        if not 0.0 <= beta < 1.0:
             raise ValueError("Invalid beta: {0}".format(beta))
 
         defaults = dict(lr=lr, momentum=momentum, beta=beta)
@@ -56,9 +57,8 @@ class SM3(Optimizer):
                 if len(state) == 0:
                     state['step'] = 0
                     state['momentum_buffer'] = 0.
-                    accumulators = _zero_accumulators(grad.shape, grad.dtype, grad.device)
-                    # Add accumulators to state dictionary
-                    state.update(accumulators)
+                    _add_zero_acc(state, grad.shape, grad.dtype, grad.device)
+
                 # Get previous accumulators mu_{t-1}
                 if rank > 1:
                     acc_list = [state[_key(i)] for i in range(rank)]
@@ -72,12 +72,9 @@ class SM3(Optimizer):
                 update.addcmul_(1. - beta, grad, grad)
 
                 # Update accumulators
-                if rank > 1:
-                    for i in range(rank):
-                        nu_max = _max_reduce_except_dim(update, i)
-                        state[_key(i)] = torch.max(acc_list[i], nu_max).detach()
-                else:
-                    state[_key(0)] = torch.max(acc_list[0], update).detach()
+                for i, acc in enumerate(acc_list):
+                    nu_max = _max_reduce_except_dim(update, i)
+                    torch.max(acc, nu_max, out=acc)
 
                 # Add small amount for numerical stability
                 # TODO: Add eps argument
@@ -107,27 +104,30 @@ def _compute_accumulator(accumulators, shape):
         result = torch.min(result, accumulators[i])
     return result
 
-def _zero_accumulators(shape, dtype, device):
+def _add_zero_acc(state, shape, dtype, device):
     # Creates initial accumulator
     rank = len(shape)
-    accumulator = {}
+    acc = {}
     if rank == 0:
         # We handle the scalar case separately.
         # TODO: Add memory_format=torch.preserve_format (new in PyTorch 1.4)
-        accumulator[_key(0)] = torch.zeros(shape, dtype=dtype, device=device)
+        acc[_key(0)] = torch.zeros(shape, dtype=dtype, device=device)
     else:
         for i in range(rank):
             acc_shape = [1]*i + [shape[i]] + [1]*(rank-1-i)
             # TODO: Add memory_format=torch.preserve_format (new in PyTorch 1.4)
-            accumulator[_key(i)] = torch.zeros(acc_shape, dtype=dtype, device=device)
-    return accumulator
+            acc[_key(i)] = torch.zeros(acc_shape, dtype=dtype, device=device)
+
+    state.update(acc)
 
 def _max_reduce_except_dim(tensor, dim):
     # Computes max along all dimensions except the given dim.
+    # If tensor is a scalar, it returns tensor.
     rank = len(tensor.shape)
-    assert dim < rank
     result = tensor
-    for d in range(rank):
-        if d != dim:
-            result = result.max(dim=d, keepdim=True).values
+    if rank > 0:
+        assert dim < rank
+        for d in range(rank):
+            if d != dim:
+                result = result.max(dim=d, keepdim=True).values
     return result
