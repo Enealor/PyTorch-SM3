@@ -1,6 +1,12 @@
-name: Python application
+name: Test PyTorch-SM3
 
-on: [push]
+on: 
+  push:
+    branches:
+      - simple_CI
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
