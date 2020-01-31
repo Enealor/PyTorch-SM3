@@ -95,7 +95,17 @@ def _test_dense_2d_updates(lr, momentum, beta):
         if momentum > 0.:
             _check_values(opt.state[x]['momentum_buffer'].numpy(), gbar)
 
-def _test_sparse_updates(lr, beta):
+@pytest.mark.parametrize(
+    'lr, beta',
+    [
+        [0.1, 0.0],
+        [0.1, 0.1],
+        [0.2, 0.3],
+        [0.3, 0.1],
+        [0.1, 0.9]
+    ]
+)
+def test_sparse_updates(lr, beta):
     var = numpy.array([[0.5, 0.05], [0.05, 1.0], [0.15, 3.0], [0.35, 2.0]])
     # A sparse gradient that updates index 1, and 3.
     indices = [1, 3]
@@ -141,11 +151,11 @@ def _test_sparse_updates(lr, beta):
         [0.1, 0.2, 0.3]
     ]
 )
-def test_updates(lr, momentum, beta):
+def test_dense_updates(lr, momentum, beta):
     _test_dense_0d_updates(lr, momentum, beta)
     _test_dense_1d_updates(lr, momentum, beta)
     _test_dense_2d_updates(lr, momentum, beta)
-    _test_sparse_updates(lr, beta)
+
 
 def _check_values(var, exp_var):
     assert numpy.isclose(var, exp_var).all()
