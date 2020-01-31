@@ -1,6 +1,7 @@
-import torch, numpy
-from SM3 import SM3
+import torch
+import numpy
 import pytest
+from SM3 import SM3
 
 
 def _test_dense_0d_updates(lr, momentum, beta):
@@ -97,7 +98,6 @@ def _test_dense_2d_updates(lr, momentum, beta):
 def _test_sparse_updates(lr, beta):
     var = numpy.array([[0.5, 0.05], [0.05, 1.0], [0.15, 3.0], [0.35, 2.0]])
     # A sparse gradient that updates index 1, and 3.
-    grad = numpy.array([[0.1, 0.05], [0.01, 1.5]])
     indices = [1, 3]
     grad_values = numpy.array([0.1, 0.05, 0.01, 1.5])
     grad_indices = torch.LongTensor([[1, 1, 3, 3], [0, 1, 0, 1]])
@@ -118,7 +118,7 @@ def _test_sparse_updates(lr, beta):
         accumulator = numpy.repeat(row_accumulator, 2, 1)
         if beta > 0.:
             accumulator[indices, :] = beta * accumulator[indices, :] \
-                                    + (1. - beta) * numpy.square(grad_values.reshape(2, 2))
+                + (1. - beta) * numpy.square(grad_values.reshape(2, 2))
         else:
             accumulator[indices, :] += numpy.square(grad_values.reshape(2, 2))
 
@@ -148,7 +148,7 @@ def test_updates(lr, momentum, beta):
     _test_sparse_updates(lr, beta)
 
 def _check_values(var, exp_var):
-        assert numpy.isclose(var, exp_var).all()
+    assert numpy.isclose(var, exp_var).all()
 
 def _create_tensor(var, grad):
     # var may change independently of x, so clone is necessary.

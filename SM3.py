@@ -12,10 +12,10 @@ class SM3(Optimizer):
         lr (float, optional): coefficient that scale delta before it is applied
             to the parameters (default: 0.1)
         momentum (float, optional): coefficient used to scale prior updates
-            before adding. This drastically increases memory usage if 
+            before adding. This drastically increases memory usage if
             `momentum > 0.0`. This parameter is ignored if the parameters are
             sparse. (default: 0.0)
-        beta (float, optional): coefficient used for exponential moving 
+        beta (float, optional): coefficient used for exponential moving
             averages (default: 0.0)
         eps (float, optional): Term added to square-root in denominator to
             improve numerical stability (default: 1e-30)
@@ -33,7 +33,7 @@ class SM3(Optimizer):
         if not 0.0 <= eps:
             raise ValueError("Invalid eps: {0}".format(eps))
 
-        defaults = dict(lr=lr, momentum=momentum, beta=beta, eps=eps)
+        defaults = {'lr': lr, 'momentum': momentum, 'beta': beta, 'eps': eps}
         super(SM3, self).__init__(params, defaults)
 
     def step(self, closure=None):
@@ -163,12 +163,9 @@ def _add_initial_accumulators(state, grad):
     # accumulator of shape (n,).
     shape = grad.shape
     rank = len(shape)
-    defaults = dict(
-        device=grad.device,
-        dtype=grad.dtype,
-    )
+    defaults = {'device': grad.device, 'dtype': grad.dtype}
     acc = {}
-    
+
     if grad.is_sparse:
         acc[_key(0)] = torch.zeros(shape[0], **defaults)
     elif rank == 0:
