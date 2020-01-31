@@ -10,7 +10,7 @@ class SM3(Optimizer):
         params (iterable): iterable of parameters to optimize or dicts defining
             parameter groups
         lr (float, optional): coefficient that scale delta before it is applied
-            to the parameters (default: 1.0)
+            to the parameters (default: 0.1)
         momentum (float, optional): coefficient used to scale prior updates
             before adding. This drastically increases memory usage if 
             `momentum > 0.0`. This parameter is ignored if the parameters are
@@ -18,12 +18,12 @@ class SM3(Optimizer):
         beta (float, optional): coefficient used for exponential moving 
             averages (default: 0.0)
         eps (float, optional): Term added to square-root in denominator to
-            improve numerical stability (default: 1e-8)
+            improve numerical stability (default: 1e-30)
 
     .. _Memory-Efficient Adaptive Optimization:
         https://arxiv.org/abs/1901.11150
     """
-    def __init__(self, params, lr=1.0, momentum=0.0, beta=0.0, eps=1e-8):
+    def __init__(self, params, lr=0.1, momentum=0.0, beta=0.0, eps=1e-30):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {0}".format(lr))
         if not 0.0 <= momentum < 1.0:
