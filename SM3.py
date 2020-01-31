@@ -13,8 +13,8 @@ class SM3(Optimizer):
             to the parameters (default: 0.1)
         momentum (float, optional): coefficient used to scale prior updates
             before adding. This drastically increases memory usage if
-            `momentum > 0.0`. This parameter is ignored if the parameters are
-            sparse. (default: 0.0)
+            `momentum > 0.0`. This parameter is ignored if the parameter's
+            gradient is sparse. (default: 0.0)
         beta (float, optional): coefficient used for exponential moving
             averages (default: 0.0)
         eps (float, optional): Term added to square-root in denominator to
