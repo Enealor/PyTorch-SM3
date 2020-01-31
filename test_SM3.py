@@ -10,8 +10,7 @@ def _test_dense_0d_updates(lr, momentum, beta):
 
     x = _create_tensor(var, grad)
 
-    opt = SM3([x], lr=lr, momentum=momentum, beta=beta, eps=1e-30)
-
+    opt = SM3([x], lr=lr, momentum=momentum, beta=beta)
     gbar = numpy.zeros_like(grad)
     accumulator = numpy.zeros_like(grad)
     for _ in range(5):
@@ -39,7 +38,7 @@ def _test_dense_1d_updates(lr, momentum, beta):
 
     x = _create_tensor(var, grad)
 
-    opt = SM3([x], lr=lr, momentum=momentum, beta=beta, eps=1e-30)
+    opt = SM3([x], lr=lr, momentum=momentum, beta=beta)
 
     gbar = numpy.zeros_like(grad)
     accumulator = numpy.zeros_like(grad)
@@ -67,7 +66,7 @@ def _test_dense_2d_updates(lr, momentum, beta):
 
     x = _create_tensor(var, grad)
 
-    opt = SM3([x], lr=lr, momentum=momentum, beta=beta, eps=1e-30)
+    opt = SM3([x], lr=lr, momentum=momentum, beta=beta)
 
     row_accumulator = numpy.zeros([2, 1])
     col_accumulator = numpy.zeros([1, 2])
@@ -119,7 +118,7 @@ def test_sparse_updates(lr, beta):
     )
 
     x = _create_tensor(var, sparse_grad)
-    opt = SM3([x], lr=lr, beta=beta, eps=1e-30)
+    opt = SM3([x], lr=lr, beta=beta)
     row_accumulator = numpy.zeros([4, 1])
 
     for _ in range(5):
