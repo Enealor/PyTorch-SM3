@@ -17,7 +17,8 @@ class SM3(Optimizer):
             sparse. (default: 0.0)
         beta (float, optional): coefficient used for exponential moving 
             averages (default: 0.0)
-        eps (float, optional): (default: 1e-8)
+        eps (float, optional): Term added to square-root in denominator to
+            improve numerical stability (default: 1e-8)
 
     .. _Memory-Efficient Adaptive Optimization:
         https://arxiv.org/abs/1901.11150
@@ -63,7 +64,7 @@ class SM3(Optimizer):
                 if len(state) == 0:
                     state['step'] = 0
                     state['momentum_buffer'] = 0.
-                    _create_acc(state, grad)
+                    _add_initial_accumulators(state, grad)
 
                 if grad.is_sparse:
                     # the update is non-linear so indices must be unique
@@ -79,14 +80,9 @@ class SM3(Optimizer):
                         return constructor(grad_indices, values, grad.size())
 
                     acc = state[_key(0)]
-                    update_values = _compute_sparse_update(
-                        beta,
-                        acc,
-                        grad_values,
-                        grad_indices
-                    )
+                    update_values = _compute_sparse_update(beta, acc, grad_values, grad_indices)
 
-                    self._update_acc_sparse(beta, acc, make_sparse(update_values))
+                    self._update_sparse_accumulator(beta, acc, make_sparse(update_values))
 
                     # Add small amount for numerical stability
                     update_values.add_(eps).rsqrt_().mul_(grad_values)
@@ -103,7 +99,7 @@ class SM3(Optimizer):
                     update = _compute_update(beta, acc_list, grad)
 
                     # Update accumulators.
-                    self._update_acc(beta, acc_list, update)
+                    self._update_accumulator(beta, acc_list, update)
 
                     # Add small amount for numerical stability
                     update.add_(eps).rsqrt_().mul_(grad)
@@ -117,7 +113,7 @@ class SM3(Optimizer):
                 state['step'] += 1
         return loss
 
-    def _update_acc(self, beta, acc_list, update):
+    def _update_accumulator(self, beta, acc_list, update):
         for i, acc in enumerate(acc_list):
             nu_max = _max_reduce_except_dim(update, i)
             if beta > 0.:
@@ -126,7 +122,7 @@ class SM3(Optimizer):
                 # No need to compare - nu_max is bigger because of grad ** 2
                 acc.copy_(nu_max)
 
-    def _update_acc_sparse(self, beta, acc, update):
+    def _update_sparse_accumulator(self, beta, acc, update):
         nu_max = _max_reduce_except_dim(update.to_dense(), 0).squeeze()
         if beta > 0.:
             torch.max(acc, nu_max, out=acc)
@@ -135,6 +131,7 @@ class SM3(Optimizer):
             acc.copy_(nu_max)
 
 def _compute_sparse_update(beta, acc, grad_values, grad_indices):
+    # In the sparse case, a single accumulator is used.
     update_values = torch.gather(acc, 0, grad_indices[0])
     if beta > 0.:
         update_values.mul_(beta)
@@ -159,8 +156,11 @@ def _key(i):
     # Returns key used for accessing accumulators
     return 'accumulator_' + str(i)
 
-def _create_acc(state, grad):
-    # Creates initial accumulator for dense tensors
+def _add_initial_accumulators(state, grad):
+    # Creates initial accumulators. For a dense tensor of shape (n1, n2, n3),
+    # then our initial accumulators are of shape (n1, 1, 1), (1, n2, 1) and
+    # (1, 1, n3). For a sparse tensor of shape (n, *), we use a single
+    # accumulator of shape (n,).
     shape = grad.shape
     rank = len(shape)
     defaults = dict(
@@ -170,7 +170,6 @@ def _create_acc(state, grad):
     acc = {}
     
     if grad.is_sparse:
-        # acc_shape = [shape[0]] + [1] * (rank-1)
         acc[_key(0)] = torch.zeros(shape[0], **defaults)
     elif rank == 0:
         # The scalar case is handled separately
