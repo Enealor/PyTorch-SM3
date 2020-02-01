@@ -42,7 +42,7 @@ jobs:
         python -m pip install --upgrade pip
         # Only want cpu version, so install directly.
         pip install --find-links=https://download.pytorch.org/whl/torch_stable.html torch==${{ matrix.version }}+cpu
-        pip install numpy
+        pip install -r requirements.txt
     - name: Test with pytest
       run: |
         pip install pytest
