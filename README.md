@@ -4,7 +4,8 @@
  [[notebook](./SM3_example.ipynb)]
 
  Implements the SM3-II adaptive optimization algorithm for PyTorch.
- The original implementation is in TensorFlow.
+ This algorithm was designed by Rohan Anil, Vineet Gupta, Tomer Koren, and
+ Yoram Singer and implemented in TensorFlow.
 
  The 'Square-root of Minima of Sums of Maxima of Squared-gradients Method'
  (SM3) algorithm is a memory-efficient adaptive optimization algorithm similar
