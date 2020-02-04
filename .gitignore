@@ -1,6 +1,3 @@
-# Notebook files - used for testing it in actual use case
-*.ipynb
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
