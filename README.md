@@ -1,6 +1,7 @@
 # PyTorch-SM3
- [[TensorFlow](https://github.com/google-research/google-research/tree/master/sm3)]
  [[source](https://arxiv.org/abs/1901.11150)]
+ [[TensorFlow](https://github.com/google-research/google-research/tree/master/sm3)]
+ [[notebook](./SM3_example.ipynb)]
 
  Implements the SM3-II adaptive optimization algorithm for PyTorch.
  The original implementation is in TensorFlow.
@@ -24,7 +25,13 @@
  memory as there is only a row cover. The value of `momentum` is ignored in
  this case.
 
-# Differences
+## Usage
+ To use this optimizer, download `SM3.py` and import the optimizer using
+ `from SM3 import SM3`. From there, it is used the same way a PyTorch
+ optimizer is typically used, e.g. it is constructed using
+ `opt = SM3(model.parameters())` and updates are done using `opt.step()`.
+
+## Differences
  The version presented by the original authors mentions that the optimization
  algorithm can be modified to use exponential moving averages. I incorporated
  this into the optimizer. If `beta = 0`, then the accumulated gradient squares
@@ -32,18 +39,38 @@
  use exponential moving averages instead. The authors found that `beta = 0` 
  was superior for their experiments in translation and language models.
 
-# Distilled wisdom from authors
+## Requirements
+ The requirements given in `requirements.txt` are not the absolute minimum -
+ the optimizer may function for earlier versions of PyTorch than 1.2. However,
+ these versions are not tested against.
+
+# Wisdom from authors
  Their full advice can be seen in the sources above. Here are two points they
- emphasize.
+ emphasize and how to incorporate them.
 ## Learning rate warm-up
  They prefer using a learning rate that quadratically ramps up to the
- full learning rate. As I understand, this is done using
- `lr = full_lr * torch.min(1.0, (current_step / warm_up_steps) ** 2).`
- After this, they do not adjust the learning rate.
+ full learning rate. This is done in the notebook linked above by using the
+ `LambdaLR` class. After creating the optimizer, you can use the following:
+ ```
+ lr_lambda = lambda epoch: min(1., (epoch / warm_up_epochs) ** 2)
+ scheduler = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
+ ```
+ The authors advocate for this as they found that the early gradients were
+ typically very large in magnitude. By using a warm-up, the accumulated
+ gradients are not dominated by the first few updates. After this warm-up,
+ they do not adjust the learning rate.
 
 ## Learning rate decay
  [Polyak averaging](https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage)
- can be useful for training models as the moving average of the
- parameters can produce better results than the parameters themselves.
- As this can be costly in memory, an alternative they present is to
- ramp the learning rate decay to 0 in the last 10% of steps.
+ can be useful for training models as the moving average of the parameters
+ can produce better results than the parameters themselves. As this can be
+ costly in memory, an alternative they present is to ramp the learning rate
+ decay to 0 in the last 10% of steps. This can also be achieved using the
+ `LambdaLR` class with the following `lambda` function:
+ ```
+ lr_lambda = lambda epoch: min(1., (total_epochs - epoch) / (0.1 * total_epochs))
+ ```
+ To incorporate both warm-up and decay, we can combine the two functions:
+ ```
+ lr_lambda = lambda epoch: min(1., (epoch / (warm_up_epochs)) ** 2, (epochs - epoch) / (0.1 * epochs))
+ ```
