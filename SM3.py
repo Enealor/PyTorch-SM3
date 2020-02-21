@@ -55,7 +55,7 @@ class SM3(Optimizer):
             for p in group['params']:
                 if p is None:
                     continue
-                grad = p.grad.detach()
+                grad = p.grad
 
                 state = self.state[p]
                 shape = grad.shape
