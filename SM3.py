@@ -36,6 +36,7 @@ class SM3(Optimizer):
         defaults = {'lr': lr, 'momentum': momentum, 'beta': beta, 'eps': eps}
         super(SM3, self).__init__(params, defaults)
 
+    @torch.no_grad()
     def step(self, closure=None):
         """Performs single optimization step.
 
@@ -54,7 +55,7 @@ class SM3(Optimizer):
             for p in group['params']:
                 if p is None:
                     continue
-                grad = p.grad.data
+                grad = p.grad.detach()
 
                 state = self.state[p]
                 shape = grad.shape
@@ -109,7 +110,7 @@ class SM3(Optimizer):
                         update.mul_(1. - momentum).add_(momentum, m)
                         state['momentum_buffer'] = update.detach()
 
-                p.data.sub_(group['lr'], update)
+                p.sub_(group['lr'], update)
                 state['step'] += 1
         return loss
 
