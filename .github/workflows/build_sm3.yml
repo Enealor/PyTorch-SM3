@@ -47,7 +47,7 @@ jobs:
         pip install --find-links=https://download.pytorch.org/whl/torch_stable.html torch==${{ matrix.pytorch-version }}+cpu
         pip install -r requirements.txt
     - name: Retrieve artifact
-      uses: actions/download-artifacts@v2
+      uses: actions/download-artifact@v2
       with:
         name: binaries
         path: ./local
