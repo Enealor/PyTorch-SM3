@@ -137,7 +137,7 @@ def _compute_sparse_update(beta, acc, grad_values, grad_indices):
     update_values = torch.gather(acc, 0, grad_indices[0])
     if beta > 0.:
         update_values.mul_(beta)
-    update_values.addcmul_(grad_values, grad_values, value=1.-beta)
+    update_values.addcmul_(grad_values, grad_values, value=1. - beta)
     return update_values
 
 def _compute_update(beta, acc_list, grad):

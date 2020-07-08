@@ -20,7 +20,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r build-requirements.txt
     - name: Lint with flake8
-      run: flake8 . --count --show-source --statistics
+      run: flake8 ./src ./tests setup.py --count --show-source --statistics
     - name: Build with setuptools
       run: python setup.py sdist bdist_wheel
     - name: Upload artifacts (tarball and wheel)
