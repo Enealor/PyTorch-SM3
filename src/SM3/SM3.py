@@ -38,7 +38,7 @@ class SM3(Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
-        """Performs single optimization step.
+        """Performs a single optimization step.
 
         Arguments:
             closure (callable, optional): A closure that reevaluates the model
@@ -108,10 +108,10 @@ class SM3(Optimizer):
 
                     if momentum > 0.:
                         m = state['momentum_buffer']
-                        update.mul_(1. - momentum).add_(momentum, m)
+                        update.mul_(1. - momentum).add_(m, alpha=momentum)
                         state['momentum_buffer'] = update.detach()
 
-                p.sub_(group['lr'], update)
+                p.sub_(update, alpha=group['lr'])
                 state['step'] += 1
         return loss
 
@@ -137,7 +137,7 @@ def _compute_sparse_update(beta, acc, grad_values, grad_indices):
     update_values = torch.gather(acc, 0, grad_indices[0])
     if beta > 0.:
         update_values.mul_(beta)
-    update_values.addcmul_(1. - beta, grad_values, grad_values)
+    update_values.addcmul_(grad_values, grad_values, value=1.-beta)
     return update_values
 
 def _compute_update(beta, acc_list, grad):
@@ -145,12 +145,10 @@ def _compute_update(beta, acc_list, grad):
     update = acc_list[0].clone()
     for i in range(1, rank):
         # We rely on broadcasting to get the proper end shape.
-        # Note that torch.min is currently (as of 1.23.2020) not commutative -
-        # the order matters for NaN values.
         update = torch.min(update, acc_list[i])
     if beta > 0.:
         update.mul_(beta)
-    update.addcmul_(1. - beta, grad, grad)
+    update.addcmul_(grad, grad, value=1. - beta)
 
     return update
 
