@@ -31,6 +31,7 @@ jobs:
 
   test:
     runs-on: ubuntu-18.04
+    needs: build
     strategy:
       matrix:
         python-version: [3.7, 3.8]
