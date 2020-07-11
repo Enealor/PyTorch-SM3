@@ -2,9 +2,14 @@ name: Build PyTorch-SM3
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+  create:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -51,10 +56,37 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: binaries
-        path: ./local
+        path: ./dist
     - name: Install new SM3 binary
-      run: pip install ./local/torch_SM3-*-py3-none-any.whl
+      run: pip install ./dist/torch_SM3-*-py3-none-any.whl
     - name: Test with pytest
       run: |
         pip install pytest==5.4.3
         pytest
+
+  publish:
+    runs-on: ubuntu-18.04
+    needs: test
+    if: startsWith(github.ref, 'refs/tags')
+    steps:
+    - name: Retrieve artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: binaries
+        path: ./dist
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.3.1
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        files: dist/
+        body_path: CHANGELOG.md # Short term fix
+        draft: true
+        prerelease: false
