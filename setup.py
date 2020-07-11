@@ -1,11 +1,13 @@
 from setuptools import setup, find_packages
 
+version='0.1.0'
+
 with open('README.md', 'r') as fh:
     long_description_text = fh.read()
 
 setup(
     name='torch-SM3',
-    version='0.0.1a',
+    version=version,
 
     package_dir={"": "src"},
     packages=find_packages(where="src"),

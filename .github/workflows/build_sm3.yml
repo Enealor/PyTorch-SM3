@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v*'
   pull_request:
     branches:
       - master
@@ -69,18 +67,17 @@ jobs:
   publish:
     runs-on: ubuntu-18.04
     needs: test
-    # if: startsWith(github.ref, 'refs/tags')
+    if: startsWith(github.ref, 'refs/tags')
     steps:
     - name: Retrieve artifact
       uses: actions/download-artifact@v2
       with:
         name: binaries
         path: ./dist
-    - name: Publish distribution to Test PyPI
+    - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@v1.3.1
       with:
-        password: ${{ secrets.TEST_PYPI_PASSWORD }}
-        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.PYPI_PASSWORD }}
     - name: Create GitHub Release
       id: create_release
       uses: actions/create-release@v1
@@ -89,9 +86,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this Release
-          - First Change
-          - Second Change
+        files: dist/
+        body_path: ${{ GITHUB_WORKSPACE }}/CHANGELOG.md
         draft: true
-        prerelease: true
+        prerelease: false
