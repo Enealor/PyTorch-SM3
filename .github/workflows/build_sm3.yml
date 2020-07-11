@@ -87,6 +87,6 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         files: dist/
-        body_path: CHANGELOG.md
+        body_path: CHANGELOG.md # Short term fix
         draft: true
         prerelease: false

@@ -12,11 +12,11 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
-## [Unreleased]
+## [0.1.0] - 2020-07-11
 ### Changed
 - Updated optimizer to use new PyTorch function signatures as the previous
 signatures were being deprecated. This means prior releases of PyTorch may not
-work.
+work with this optimizer.
 - Updated repository structure for packaging. The code for the optimizer has
 been moved to `src/`. The code for testing the optimizer against NumPy has been
 moved to `tests/`.
