@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name='torch-SM3',
-    version='0.0.1',
+    version='0.0.1a',
 
     package_dir={"": "src"},
     packages=find_packages(where="src"),
