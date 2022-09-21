@@ -12,6 +12,10 @@ Types of changes
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities.
 
+## Unreleased
+### Fixed
+- Parameters without a gradient no longer cause an AttributeError exception. This occurs when a model has a parameter with the `requires_grad` attribute set to `False` (e.g. the model has a frozen layer). Previously, the exception would be raised when the SM3 class method `step` is called.
+
 ## [0.1.0] - 2020-07-11
 ### Changed
 - Updated optimizer to use new PyTorch function signatures as the previous
