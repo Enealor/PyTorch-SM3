@@ -9,12 +9,9 @@ def test_with_frozen():
     
     # Create a small model. The first layer will be frozen.
     test_model = torch.nn.Sequential(
-        torch.nn.Linear(10, 5), #frozen
+        torch.nn.Linear(10, 5).requires_grad_(False), #frozen
         torch.nn.Linear(5, 1), #unfrozen
     )
-    for idx, parameters in enumerate(test_model.parameters()):
-        if idx == 0:
-            parameters.requires_grad = False # When this flag is false, gradients are of NoneType.
 
     # Create optimizer, and input. The LR, and input value can be anything.
     test_optim = SM3(test_model.parameters(), lr=0.1)
