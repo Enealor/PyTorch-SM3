@@ -20,7 +20,7 @@ def test_with_frozen():
 
     # Run an update stage with a loss function. The loss function used can be anything.
     test_optim.zero_grad()
-    test_loss = torch.square(test_model(test_input))
+    test_loss = torch.nn.functional.mse_loss(test_model(test_input), torch.zeros(1, 1))
     test_loss.backward()
     # This test fails if an exception is raised. Everything else is a pass.
     try:
