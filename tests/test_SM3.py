@@ -3,20 +3,21 @@ import numpy
 import pytest
 from SM3 import SM3
 
+
 def test_with_frozen():
     # Reported issue: https://github.com/Enealor/PyTorch-SM3/issues/19
     # This test is designed to fail if an exception is raised when a layer is frozen.
-    
+
     # Create a small model. The first layer will be frozen.
     test_model = torch.nn.Sequential(
-        torch.nn.Linear(10, 5).requires_grad_(False), #frozen
-        torch.nn.Linear(5, 1), #unfrozen
+        torch.nn.Linear(10, 5).requires_grad_(False),  # frozen
+        torch.nn.Linear(5, 1),  # unfrozen
     )
 
     # Create optimizer, and input. The LR, and input value can be anything.
     test_optim = SM3(test_model.parameters(), lr=0.1)
     test_input = torch.ones(1, 10)
-    
+
     # Run an update stage with a loss function. The loss function used can be anything.
     test_optim.zero_grad()
     test_loss = torch.square(test_model(test_input))
@@ -26,6 +27,7 @@ def test_with_frozen():
         test_optim.step()
     except AttributeError:
         assert False
+
 
 @pytest.mark.parametrize(
     'lr, beta',
@@ -71,6 +73,7 @@ def test_sparse_updates(lr, beta):
 
         _check_values(x.numpy()[indices, :], var[indices, :])
         _check_values(opt.state[x]['accumulator_0'].numpy().flatten(), row_accumulator.flatten())
+
 
 @pytest.mark.parametrize(
     'lr, momentum, beta',
@@ -145,6 +148,7 @@ def _test_dense_1d_updates(lr, momentum, beta):
         if momentum > 0.:
             _check_values(opt.state[x]['momentum_buffer'].numpy(), gbar)
 
+
 def _test_dense_2d_updates(lr, momentum, beta):
     var = numpy.array([[.5, .5], [.5, .5]])
     grad = numpy.array([[.1, .05], [.02, .03]])
@@ -179,8 +183,10 @@ def _test_dense_2d_updates(lr, momentum, beta):
         if momentum > 0.:
             _check_values(opt.state[x]['momentum_buffer'].numpy(), gbar)
 
+
 def _check_values(var, exp_var):
     assert numpy.isclose(var, exp_var).all()
+
 
 def _create_tensor(var, grad):
     # var may change independently of x, so clone is necessary.
