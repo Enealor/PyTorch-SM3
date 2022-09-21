@@ -54,9 +54,9 @@ class SM3(Optimizer):
             beta = group['beta']
             eps = group['eps']
             for p in group['params']:
-                if p is None:
-                    continue
                 grad = p.grad
+                if p is None or grad is None:
+                    continue
 
                 state = self.state[p]
                 shape = grad.shape
