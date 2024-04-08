@@ -1,3 +1,5 @@
+# Copyright 2020 Eleanor Holland
+# SPDX-License-Identifier: Apache-2.0
 from torch.optim import Optimizer, _params_t
 
 class SM3(Optimizer):

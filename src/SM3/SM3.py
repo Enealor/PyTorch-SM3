@@ -1,3 +1,5 @@
+# Copyright 2020 Eleanor Holland
+# SPDX-License-Identifier: Apache-2.0
 import torch
 from torch.optim import Optimizer
 
